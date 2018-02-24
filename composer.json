@@ -1,0 +1,33 @@
+{
+  "name": "slabphp/session-manager",
+  "description": "SlabPHP Session Manager Library",
+  "type": "library",
+  "keywords": [],
+  "homepage": "https://www.salernolabs.com/slab",
+  "time": "2018-02-18",
+  "license": "Apache-2.0",
+  "authors": [
+    {
+      "name": "Eric Salerno",
+      "email": "ericsalerno@gmail.com",
+      "homepage": "http://www.ericsalerno.com/",
+      "role": "Architect"
+    }
+  ],
+  "support":{
+    "email": "salernolabs@gmail.com"
+  },
+  "require-dev":{
+    "phpunit/phpunit": "^6.5"
+  },
+  "require": {
+    "slabphp/component-interfaces": "^0.2",
+    "psr/log": "^1.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Slab\\Session\\": "src/",
+      "Slab\\Tests\\Session\\": "tests/"
+    }
+  }
+}

@@ -1,0 +1,1 @@
+Temporary files for testing the session file handler will appear here.

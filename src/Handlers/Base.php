@@ -39,10 +39,9 @@ abstract class Base implements \SessionHandlerInterface
     }
 
     /**
-     * Open a session
-     *
      * @param string $parameter
      * @param string $token
+     * @return mixed
      */
     abstract public function open($parameter, $token);
 
@@ -52,31 +51,27 @@ abstract class Base implements \SessionHandlerInterface
     abstract public function close();
 
     /**
-     * Read from a session
-     *
      * @param string $id
+     * @return mixed
      */
     abstract public function read($id);
 
     /**
-     * Write to a session
-     *
      * @param string $id
      * @param string $data
+     * @return mixed
      */
     abstract public function write($id, $data);
 
     /**
-     * Destroy a session
-     *
      * @param string $id
+     * @return mixed
      */
     abstract public function destroy($id);
 
     /**
-     * Perform garbage collection
-     *
-     * @param integer $maxLifeTime
+     * @param int $maxLifeTime
+     * @return mixed
      */
     abstract public function gc($maxLifeTime);
 
@@ -92,7 +87,7 @@ abstract class Base implements \SessionHandlerInterface
     /**
      * Use native session handling instead of the driver
      */
-    public function beginNativeSessionUsage()
+    public function startNativeSession()
     {
         session_set_save_handler($this, true);
         session_start();

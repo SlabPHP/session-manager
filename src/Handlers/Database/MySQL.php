@@ -117,9 +117,8 @@ class MySQL extends Database
     }
 
     /**
-     * Kill by some input
-     *
-     * @param $input
+     * @param $field
+     * @param $value
      * @return bool
      */
     public function killByUserDataField($field, $value)

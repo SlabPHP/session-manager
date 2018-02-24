@@ -25,25 +25,38 @@ class File extends Base
     protected $sessionFilePrefix = "sess_";
 
     /**
-     * Session Open
+     * Set save path
      *
-     * @see SessionHandler::open()
+     * @param $savePath
+     * @return $this
      */
-    public function open($savePath, $sessionName)
+    public function setSavePath($savePath)
     {
+        if (empty($savePath)) return $this;
+
         $this->savePath = $savePath;
 
         if (!is_dir($this->savePath)) {
             mkdir($this->savePath);
         }
 
+        return $this;
+    }
+
+    /**
+     * @param string $savePath
+     * @param string $sessionName
+     * @return bool
+     */
+    public function open($savePath, $sessionName)
+    {
+        $this->setSavePath($savePath);
+
         return true;
     }
 
     /**
-     * Session Close
-     *
-     * @see SessionHandler::close()
+     * @return bool
      */
     public function close()
     {
@@ -51,9 +64,8 @@ class File extends Base
     }
 
     /**
-     * Session Read
-     *
-     * @see SessionHandler::read()
+     * @param string $id
+     * @return string
      */
     public function read($id)
     {
@@ -61,9 +73,9 @@ class File extends Base
     }
 
     /**
-     * Session Write
-     *
-     * @see SessionHandler::write()
+     * @param string $id
+     * @param string $data
+     * @return bool
      */
     public function write($id, $data)
     {
@@ -71,9 +83,8 @@ class File extends Base
     }
 
     /**
-     * Session Destroy
-     *
-     * @see SessionHandler::destroy()
+     * @param string $id
+     * @return bool
      */
     public function destroy($id)
     {
@@ -87,9 +98,8 @@ class File extends Base
     }
 
     /**
-     * Garbage Collection
-     *
-     * @see SessionHandler::gc()
+     * @param int $maxlifetime
+     * @return bool
      */
     public function gc($maxlifetime)
     {
@@ -103,7 +113,8 @@ class File extends Base
     }
 
     /**
-     * @see \Slab\Session\Handlers\Base::validateSession()
+     * @param $sessionData
+     * @return bool
      */
     protected function validateSession($sessionData)
     {

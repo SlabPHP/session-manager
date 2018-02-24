@@ -158,13 +158,14 @@ class Driver implements \Slab\Components\SessionDriverInterface
     }
 
     /**
-     * Unset user data
-     *
-     * @param string $variable
+     * @param $variable
+     * @return bool
      */
     public function delete($variable)
     {
         unset($this->userData[$variable]);
+
+        return true;
     }
 
     /**

@@ -51,12 +51,28 @@ class Driver implements \Slab\Components\SessionDriverInterface
     /**
      * @var string
      */
-    private $sessionCookieName = 'slabsession';
+    private $sessionCookieName = 'session';
 
     /**
      * @var int
      */
     private $sessionExpiration = 86400;
+
+    /**
+     * @var string
+     */
+    protected $sessionCookiePath = '/';
+
+    /**
+     * @var string
+     */
+    protected $sessionCookieDomain = '';
+
+    /**
+     * @var bool
+     */
+    protected $sessionCookieSecure = false;
+
 
     /**
      * @var \Psr\Log\LoggerInterface
@@ -75,14 +91,22 @@ class Driver implements \Slab\Components\SessionDriverInterface
     }
 
     /**
-     * @param $cookieName
-     * @param $expiration
+     * Set cookie parameters
+     *
+     * @param string $cookieName
+     * @param int $expiration
+     * @param string $path
+     * @param string $domain
+     * @param bool $secure
      * @return $this
      */
-    public function setCookieParameters($cookieName, $expiration)
+    public function setCookieParameters($cookieName, $expiration, $path = '/', $domain = '', $secure = false)
     {
         $this->sessionCookieName = $cookieName;
         $this->sessionExpiration = $expiration;
+        $this->sessionCookiePath = $path;
+        $this->sessionCookieDomain = $domain;
+        $this->sessionCookieSecure = $secure;
 
         return $this;
     }
@@ -115,7 +139,18 @@ class Driver implements \Slab\Components\SessionDriverInterface
 
         if (!headers_sent())
         {
-            setcookie($this->sessionCookieName, $this->sessionToken, $this->sessionExpiration);
+            if (!setcookie(
+                $this->sessionCookieName,
+                $this->sessionToken,
+                !empty($this->sessionExpiration) ? (time() + $this->sessionExpiration) : 0,
+                $this->sessionCookiePath,
+                $this->sessionCookieDomain,
+                $this->sessionCookieSecure
+            )) {
+                if ($this->log) {
+                    $this->log->critical('Failed to save session cookie!');
+                }
+            }
         }
     }
 

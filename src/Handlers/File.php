@@ -12,10 +12,9 @@ class File extends Base
 {
     /**
      * Save path
-     *
      * @var string
      */
-    protected $savePath = "/tmp/session";
+    const DEFAULT_SAVE_PATH = "/tmp/session";
 
     /**
      * Session file prefix
@@ -50,7 +49,11 @@ class File extends Base
      */
     public function open($savePath, $sessionName)
     {
-        $this->setSavePath($savePath);
+        if (empty($savePath)) {
+            $this->setSavePath(static::DEFAULT_SAVE_PATH);
+        } else {
+            $this->setSavePath($savePath);
+        }
 
         return true;
     }

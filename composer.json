@@ -24,6 +24,9 @@
     "slabphp/component-interfaces": "^0.2",
     "psr/log": "^1.0"
   },
+  "suggest": {
+    "ext-mysqli": "Include mysqli extension to use database session providers."
+  },
   "autoload": {
     "psr-4": {
       "Slab\\Session\\": "src/",

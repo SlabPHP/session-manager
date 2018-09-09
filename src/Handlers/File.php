@@ -15,7 +15,7 @@ class File extends Base
      *
      * @var string
      */
-    protected $savePath = "cache";
+    protected $savePath = "/tmp/session";
 
     /**
      * Session file prefix

@@ -22,7 +22,8 @@
   },
   "require": {
     "slabphp/component-interfaces": "^0.2",
-    "psr/log": "^1.0"
+    "psr/log": "^1.0",
+    "ext-mbstring": "^7.0"
   },
   "suggest": {
     "ext-mysqli": "Include mysqli extension to use database session providers."

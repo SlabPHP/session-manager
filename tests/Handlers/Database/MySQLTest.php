@@ -21,18 +21,50 @@ class MySQLTest extends \PHPUnit\Framework\TestCase
         $sessionName = 'test-session';
         $siteName = 'site-name';
 
+        $resultMock = $this->getMockBuilder('\mysqli_result')
+            ->disableOriginalConstructor()
+            ->setMethods(['fetch_object'])
+            ->getMock();
+
+        $resultMock
+            ->expects($this->once())
+            ->method('fetch_object')
+            ->willReturn(new TestResponse());
+
+        $statementMock = $this->getMockBuilder('\mysqli_stmt')
+            ->disableOriginalConstructor()
+            ->setMethods(['bind_param', 'get_result', 'execute', 'close'])
+            ->getMock();
+
+        $statementMock
+            ->expects($this->once())
+            ->method('bind_param')
+            ->with('ss', $sessionName, $siteName);
+
+        $statementMock
+            ->expects($this->once())
+            ->method('get_result')
+            ->willReturn($resultMock);
+
+        $statementMock
+            ->expects($this->once())
+            ->method('execute')
+            ->willReturn(true);
+
+        $statementMock
+            ->expects($this->once())
+            ->method('close')
+            ->willReturn(true);
+
         $mock = $this->getMockBuilder('\Mysqli')
-            ->setMethods(['real_escape_string', 'query'])
+            ->disableOriginalConstructor()
+            ->setMethods(['prepare'])
             ->getMock();
 
         $mock->expects($this->any())
-            ->method('real_escape_string')
-            ->willReturn('ESCAPED');
-
-        $mock->expects($this->once())
-            ->method('query')
-            ->with($this->equalTo("select `agent`, `data` from `main`.`table` where `id` = ESCAPED and `site` = ESCAPED limit 1;"))
-            ->willReturn(new TestResponse());
+            ->method('prepare')
+            ->with('select `agent`, `data` from `main`.`table` where `id` = ? and `site` = ? limit 1')
+            ->willReturn($statementMock);
 
         $handler = new \Slab\Session\Handlers\Database\MySQL();
         $handler->setDatabase($mock, 'main', 'table', $siteName);
@@ -48,16 +80,9 @@ class MySQLTest extends \PHPUnit\Framework\TestCase
 
 class TestResponse
 {
-    public $num_rows = 1;
+    public $id = 'site-name';
 
-    public function fetch_row()
-    {
-        $object = new \stdClass();
+    public $data = 'a:2:{s:5:"hello";b:1;s:9:"timestamp";i:1519492959;}';
 
-        $object->id = 'site-name';
-        $object->data = 'a:2:{s:5:"hello";b:1;s:9:"timestamp";i:1519492959;}';
-        $object->agent = 'phpunit';
-
-        return $object;
-    }
+    public $agent = 'phpunit';
 }

@@ -68,7 +68,7 @@ abstract class Database extends \Slab\Session\Handlers\Base
     {
         if ($this->validateUserAgent)
         {
-            return ($sessionData->user_agent == $_SERVER['HTTP_USER_AGENT']);
+            return ($sessionData->agent == $_SERVER['HTTP_USER_AGENT']);
         }
 
         return true;

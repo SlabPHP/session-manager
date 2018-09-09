@@ -45,28 +45,52 @@ class MySQL extends Database
     public function read($id)
     {
         try {
-            $sql = 'select `agent`, `data` from `' . $this->database . '`.`' . $this->table . '` where `id` = ' . $this->databaseResource->real_escape_string($id) . ' and `site` = ' . $this->databaseResource->real_escape_string($this->siteName) . ' limit 1;';
+            $sessionSQL = sprintf(
+                'select `agent`, `data` from `%s`.`%s` where `id` = ? and `site` = ? limit 1',
+                $this->database,
+                $this->table
+            );
 
-            $result = $this->databaseResource->query($sql);
+            $statement = $this->databaseResource->prepare($sessionSQL);
+
+            $statement->bind_param('ss', $id, $this->siteName);
+
+            $statement->execute();
+
+            $result = $statement->get_result();
+
+            if (empty($result)) {
+                throw new \Exception("No result returned.");
+            }
+
+            $sessionData = $result->fetch_object();
+
+            $statement->close();
+
+            if (empty($sessionData->data)) {
+                throw new \Exception("No data returned.");
+            }
 
         } catch (\Exception $exception) {
+            die($exception->getMessage());
             return '';
         }
 
-        if ($result->num_rows == 0) {
-            return '';
-        }
-
-        $row = $result->fetch_row();
-
-        if (!$this->validateSession($row)) {
+        if (!$this->validateSession($sessionData)) {
             $this->destroy($id);
 
-            $message = "Session corruption on " . $id . " user agent " . $row->agent . " does not match " . $_SERVER["HTTP_USER_AGENT"] . " " . $_SERVER["REMOTE_ADDR"];
+            $message = sprintf(
+                "Session corruption on %s user agent %s does not match %s %s.",
+                $id,
+                $sessionData->agent,
+                $_SERVER["HTTP_USER_AGENT"],
+                $_SERVER["REMOTE_ADDR"]
+            );
+
             throw new \Slab\Session\Exceptions\Corruption($message);
         }
 
-        return $row->data;
+        return $sessionData->data;
     }
 
     /**
@@ -77,25 +101,47 @@ class MySQL extends Database
     public function write($id, $data)
     {
         try {
-            $escapedData = $this->databaseResource->real_escape_string($data);
-            $escapedTime = $this->databaseResource->real_escape_string(date('Y-m-d H:i:s'));
+            $sessionSQL = sprintf(
+                'insert into `%s`.`%s` (`id`, `site`, `ip`, `agent`, `activity`, `data`) values (?, ?, ?, ?, ?, ?) on duplicate key update `activity` = ?, `data` = ?',
+                $this->database,
+                $this->table
+            );
 
-            $sql = 'insert into `' . $this->database . '`.`' . $this->table . '` (`id`, `site`, `ip`, `agent`, `activity`, `data`) values (' ;
-            $sql.= $this->databaseResource->real_escape_string($id) . ', ';
-            $sql.= $this->databaseResource->real_escape_string($this->siteName) . ', ';
-            $sql.= $this->databaseResource->real_escape_string($_SERVER['REMOTE_ADDR']) . ', ';
-            $sql.= $this->databaseResource->real_escape_string($_SERVER['HTTP_USER_AGENT']) . ', ';
-            $sql.= $escapedTime . ', ';
-            $sql.= $escapedData . ') ';
-            $sql.= ' on duplicate key update `last_activity` = ' . $escapedTime;
-            $sql.= ', `data` = ' . $escapedData. ';';
+            if (!($statement = $this->databaseResource->prepare($sessionSQL))) {
+                throw new \Exception("Failed to prepare statement!");
+            }
 
-            $result = $this->databaseResource->query($sql);
+            $activity = date('Y-m-d H:i:s');
+            $ip = !empty($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
+            $agent = !empty($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
+
+            if (!$statement->bind_param(
+                'ssssssss',
+                $id,
+                $this->siteName,
+                $ip,
+                $agent,
+                $activity,
+                $data,
+                $activity,
+                $data
+            )) {
+                throw new \Exception("Failed to bind parameters to statement!");
+            }
+
+            $statement->execute();
+
+            $result = $statement->affected_rows;
+
+            $statement->close();
+
+            return ($result > 0);
+
         } catch (\Exception $exception) {
-            return false;
+            //We can return false
         }
 
-        return ($result->num_rows ? true : false);
+        return false;
     }
 
     /**
@@ -106,14 +152,27 @@ class MySQL extends Database
     public function destroy($id)
     {
         try {
-            $sql = 'delete from `' . $this->database . '`.`' . $this->table . '` where `id` = ' . $this->databaseResource->real_escape_string($id) . ' and `site` = ' . $this->databaseResource->real_escape_string($this->siteName) . ' limit 1;';
+            $sessionSQL = sprintf(
+                'delete from `%s`.`%s` where `id` = ? and `site` = ? limit 1',
+                $this->database,
+                $this->table
+            );
 
-            $result = $this->databaseResource->query($sql);
+            $statement = $this->databaseResource->prepare($sessionSQL);
+
+            $statement->bind_param('ss', $id, $this->siteName);
+
+            $statement->execute();
+
+            $statement->close();
+
+            return true;
+
         } catch (\Exception $exception) {
-            return false;
+            // We can return false
         }
 
-        return ($result->num_rows ? true : false);
+        return false;
     }
 
     /**
@@ -121,9 +180,9 @@ class MySQL extends Database
      * @param $value
      * @return bool
      */
-    public function killByUserDataField($field, $value)
+    public function deleteByDataFieldValue($field, $value)
     {
-        $input = '%s:' . mb_strlen($field) . ':"' . $field . '"';
+        $input = '%s:' . strlen($field) . ':"' . $field . '"';
         if (is_string($value)) {
             $input .= ';s:' . mb_strlen($value) . ':"' . $value . '"%';
         } elseif (is_integer($value)) {
@@ -132,15 +191,30 @@ class MySQL extends Database
             return false;
         }
 
-        try {
-            $sql = 'delete from `' . $this->database . '`.`' . $this->table . '` where `data` like ' . $this->databaseResource->real_escape_string($input) . ' and `site` = ' . $this->databaseResource->real_escape_string($this->siteName) . ' limit 1;';
+        $num_rows = 0;
 
-            $result = $this->databaseResource->real_escape_string($sql);
+        try {
+            $sessionSQL = sprintf(
+                'delete from `%s`.`%s` where `data` like ? and `site` = ? limit 1',
+                $this->database,
+                $this->table
+            );
+
+            $statement = $this->databaseResource->prepare($sessionSQL);
+
+            $statement->bind_param('ss', $input, $this->siteName);
+
+            $statement->execute();
+
+            $num_rows = $statement->affected_rows;
+
+            $statement->close();
+
         } catch (\Exception $exception) {
-            return false;
+            // Log and return
         }
 
-        return ($result->num_rows ? true : false);
+        return $num_rows ? true : false;
     }
 
     /**
@@ -156,12 +230,26 @@ class MySQL extends Database
         $cutOff->modify('-' . $maxlifetime . ' seconds');
 
         try {
-            $query = 'delete from `' . $this->database . '`.`' . $this->table . '` where activity <= ' . $this->databaseResource->real_escape_string($cutOff->format('Y-m-d H:i:s'));
-            $result = $this->databaseResource->query($query);
+            $sessionSQL = sprintf(
+                'delete from `%s`.`%s` where `activity` <= ?',
+                $this->database,
+                $this->table
+            );
+
+            $statement = $this->databaseResource->prepare($sessionSQL);
+
+            $cutOffTimestamp = $cutOff->format('Y-m-d H:i:s');
+            $statement->bind_param('s', $cutOffTimestamp);
+
+            $statement->execute();
+
+            $statement->close();
+
+            return true;
         } catch (\Exception $exception) {
-            return false;
+            // Log and return false
         }
 
-        return ($result->num_rows > 0 ? true : false);
+        return false;
     }
 }

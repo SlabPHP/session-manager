@@ -10,4 +10,4 @@ CREATE TABLE `sessions` (
 ALTER TABLE `sessions`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `id` (`id`,`site`),
-  ADD KEY `last_activity_idx` (`last_activity`);
+  ADD KEY `last_activity_idx` (`activity`);

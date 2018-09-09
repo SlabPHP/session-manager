@@ -11,10 +11,16 @@ namespace Slab\Session\Handlers;
 class File extends Base
 {
     /**
-     * Save path
+     * Default Save path
      * @var string
      */
     const DEFAULT_SAVE_PATH = "/tmp/session";
+
+    /**
+     * Actual save path
+     * @var string
+     */
+    protected $savePath;
 
     /**
      * Session file prefix
@@ -82,7 +88,7 @@ class File extends Base
      */
     public function write($id, $data)
     {
-        return file_put_contents($this->savePath . DIRECTORY_SEPARATOR . $this->sessionFilePrefix . $id, $data) === false ? false : true;
+        return @file_put_contents($this->savePath . DIRECTORY_SEPARATOR . $this->sessionFilePrefix . $id, $data) === false ? false : true;
     }
 
     /**

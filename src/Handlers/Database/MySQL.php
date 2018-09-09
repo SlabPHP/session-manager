@@ -72,7 +72,6 @@ class MySQL extends Database
             }
 
         } catch (\Exception $exception) {
-            die($exception->getMessage());
             return '';
         }
 

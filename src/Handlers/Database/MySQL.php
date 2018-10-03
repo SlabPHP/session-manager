@@ -26,7 +26,7 @@ class MySQL extends Database
     public function setDatabase($databaseResource, $databaseName, $table, $siteName)
     {
         $this->databaseResource = $databaseResource;
-        if (!($this->databaseResource instanceof \Mysqli)) {
+        if (!($this->databaseResource instanceof \mysqli)) {
             throw new \Exception('Please use an object of type \Mysqli as your database resource.');
         }
 
@@ -44,6 +44,10 @@ class MySQL extends Database
      */
     public function read($id)
     {
+        if (empty($id)) {
+            return '';
+        }
+
         try {
             $sessionSQL = sprintf(
                 'select `agent`, `data` from `%s`.`%s` where `id` = ? and `site` = ? limit 1',
@@ -72,7 +76,6 @@ class MySQL extends Database
             }
 
         } catch (\Exception $exception) {
-            die($exception->getMessage());
             return '';
         }
 

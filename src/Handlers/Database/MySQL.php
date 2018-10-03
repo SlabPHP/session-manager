@@ -57,6 +57,10 @@ class MySQL extends Database
 
             $statement = $this->databaseResource->prepare($sessionSQL);
 
+            if (empty($statement)) {
+                throw new \Exception("Failed to prepare session read statement!");
+            }
+
             $statement->bind_param('ss', $id, $this->siteName);
 
             $statement->execute();
@@ -110,8 +114,10 @@ class MySQL extends Database
                 $this->table
             );
 
-            if (!($statement = $this->databaseResource->prepare($sessionSQL))) {
-                throw new \Exception("Failed to prepare statement!");
+            $statement = $this->databaseResource->prepare($sessionSQL);
+
+            if (empty($statement)) {
+                throw new \Exception("Failed to prepare session write statement!");
             }
 
             $activity = date('Y-m-d H:i:s');
@@ -163,6 +169,10 @@ class MySQL extends Database
 
             $statement = $this->databaseResource->prepare($sessionSQL);
 
+            if (empty($statement)) {
+                throw new \Exception("Could not prepare session destroy statement.");
+            }
+
             $statement->bind_param('ss', $id, $this->siteName);
 
             $statement->execute();
@@ -205,6 +215,10 @@ class MySQL extends Database
 
             $statement = $this->databaseResource->prepare($sessionSQL);
 
+            if (empty($statement)) {
+                throw new \Exception("Could not prepare session deleteByDataFieldValue statement.");
+            }
+
             $statement->bind_param('ss', $input, $this->siteName);
 
             $statement->execute();
@@ -240,6 +254,10 @@ class MySQL extends Database
             );
 
             $statement = $this->databaseResource->prepare($sessionSQL);
+
+            if (empty($statement)) {
+                throw new \Exception("Could not prepare session gc statement.");
+            }
 
             $cutOffTimestamp = $cutOff->format('Y-m-d H:i:s');
             $statement->bind_param('s', $cutOffTimestamp);

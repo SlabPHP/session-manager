@@ -137,19 +137,23 @@ class Driver implements \Slab\Components\SessionDriverInterface
 
         $this->sessionToken = sha1(uniqid('slabphp', true));
 
-        if (!headers_sent())
-        {
-            if (!setcookie(
-                $this->sessionCookieName,
-                $this->sessionToken,
-                !empty($this->sessionExpiration) ? (time() + $this->sessionExpiration) : 0,
-                $this->sessionCookiePath,
-                $this->sessionCookieDomain,
-                $this->sessionCookieSecure
-            )) {
-                if ($this->log) {
-                    $this->log->critical('Failed to save session cookie!');
-                }
+        if (headers_sent()) {
+            if ($this->log) {
+                $this->log->critical('Failed to save session cookie, headers already sent.');
+            }
+            return;
+        }
+
+        if (!setcookie(
+            $this->sessionCookieName,
+            $this->sessionToken,
+            !empty($this->sessionExpiration) ? (time() + $this->sessionExpiration) : 0,
+            $this->sessionCookiePath,
+            $this->sessionCookieDomain,
+            $this->sessionCookieSecure
+        )) {
+            if ($this->log) {
+                $this->log->critical('Failed to save session cookie!');
             }
         }
     }

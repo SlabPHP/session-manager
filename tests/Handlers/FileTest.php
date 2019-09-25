@@ -18,6 +18,16 @@ class FileTest extends \PHPUnit\Framework\TestCase
         $sessionName = 'test-session';
         $sessionDir = __DIR__ . '/../data';
 
+        $testFile = $sessionDir . '/sess_' . $sessionName;
+        if (is_file($testFile)) {
+            @unlink($testFile);
+        }
+
+        if (is_file($testFile)) {
+            $this->fail('the test file still exists from a prior run');
+            return;
+        }
+
         $handler = new \Slab\Session\Handlers\File();
         $this->assertEquals(true, $handler->open($sessionDir, $sessionName));
         $data = unserialize($handler->read($sessionName));
@@ -36,5 +46,7 @@ class FileTest extends \PHPUnit\Framework\TestCase
 
         $this->assertEquals(true, $data['hello']);
         $this->assertEquals($time, $data['timestamp']);
+
+        @unlink($testFile);
     }
 }

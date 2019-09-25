@@ -56,7 +56,11 @@ class File extends Base
     public function open($savePath, $sessionName)
     {
         if (empty($savePath)) {
-            $this->setSavePath(static::DEFAULT_SAVE_PATH);
+            if (empty($this->savePath)) {
+                $this->setSavePath(static::DEFAULT_SAVE_PATH);
+            } else {
+                $this->setSavePath($this->savePath);
+            }
         } else {
             $this->setSavePath($savePath);
         }

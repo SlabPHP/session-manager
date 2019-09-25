@@ -22,7 +22,7 @@ class FileTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(true, $handler->open($sessionDir, $sessionName));
         $data = unserialize($handler->read($sessionName));
 
-        $this->assertEquals(true, $data['hello']);
+        $this->assertEquals(null, $data['hello']);
 
         $time = time();
         $handler->write($sessionName, serialize(['hello'=>true,'timestamp'=>$time]));
